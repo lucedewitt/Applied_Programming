@@ -1,16 +1,21 @@
 // import * as Device from 'expo-device';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from 'react';
 import {
   View,
   Text,
   Image,
+  Alert,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   TextInput,
   StyleSheet,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { useTrips } from '@/context/TripsContext';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 
 // import { AnimatedIcon } from '@/components/animated-icon';
@@ -20,36 +25,104 @@ import { Calendar } from 'react-native-calendars';
 // import { WebBadge } from '@/components/web-badge';
 // import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 
-const initialEvents = [
+type EventItem = {
+  id: string;
+  tripId: string;
+  date: string;
+  title: string;
+  time: string;
+};
+
+// These starter events are used only when the device has no saved calendar data yet.
+const initialEvents: EventItem[] = [
   {
     id: '1',
+    tripId: '1',
     date: '2026-10-15',
     title: 'Doctor appointment',
     time: '10:00 AM',
   },
   {
     id: '2',
+    tripId: '1',
     date: '2026-10-15',
     title: 'Team meeting',
     time: '2:00 PM',
   },
   {
     id: '3',
+    tripId: '1',
     date: '2026-10-20',
     title: 'Project deadline',
     time: 'All day',
   },
 ];
+const EVENTS_STORAGE_KEY = '@travel-planner/events';
 
 export default function HomeScreen() {
+  // Trips come from the shared context so additions made on the journal screen
+  // immediately appear in this screen's trip menu.
+  const { trips, addTrip, removeTrip } = useTrips();
+  const [selectedTripId, setSelectedTripId] = useState('1');
   const [events, setEvents] = useState(initialEvents);
   const [selectedDate, setSelectedDate] = useState('2026-10-15');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDay, setEditingDay] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventTime, setNewEventTime] = useState('');
-  const selectedEvents = events.filter(event => event.date === selectedDate);
+  const [tripMenuVisible, setTripMenuVisible] = useState(false);
+  const [createTripModalVisible, setCreateTripModalVisible] = useState(false);
+  const [newTripName, setNewTripName] = useState('');
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+  const lastDayPress = useRef<{ dateString: string; timestamp: number } | null>(null);
+
+  // Load calendar events once when the screen starts. The loaded flag prevents
+  // the initial fallback data from overwriting saved events.
+  useEffect(() => {
+    let isMounted = true;
+
+    AsyncStorage.getItem(EVENTS_STORAGE_KEY)
+      .then(savedEvents => {
+        if (!isMounted) return;
+        if (savedEvents) {
+          try {
+            const parsedEvents = JSON.parse(savedEvents) as EventItem[];
+            if (Array.isArray(parsedEvents)) setEvents(parsedEvents);
+          } catch {
+            // Fall back to the starter events if saved data is invalid.
+          }
+        }
+        setEventsLoaded(true);
+      })
+      .catch(() => setEventsLoaded(true));
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Persist every event change locally on the device.
+  useEffect(() => {
+    if (eventsLoaded) {
+      AsyncStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events)).catch(() => {
+        // Keep the app usable if the native storage module is unavailable.
+      });
+    }
+  }, [events, eventsLoaded]);
+  // These derived values keep the calendar and event list scoped to the
+  // currently selected trip and date.
+  const selectedTrip = trips.find(trip => trip.id === selectedTripId) ?? trips[0];
+  const selectedEvents = events.filter(
+    event => event.tripId === selectedTripId && event.date === selectedDate
+  );
   const markedDates: Record<string, any> = {};
+
+  // If a previously selected trip was deleted, fall back to the first remaining trip.
+  useEffect(() => {
+    if (trips.length > 0 && !trips.some(trip => trip.id === selectedTripId)) {
+      setSelectedTripId(trips[0].id);
+    }
+  }, [selectedTripId, trips]);
 
   const formattedSelectedDate = (() => {
     const [year, month, day] = selectedDate.split('-').map(Number);
@@ -60,6 +133,7 @@ export default function HomeScreen() {
     });
   })();
 
+  // Add an event to the selected trip and calendar date.
   const addEvent = () => {
     if (!newEventTitle.trim()) return;
 
@@ -67,6 +141,7 @@ export default function HomeScreen() {
       ...currentEvents,
       {
         id: Date.now().toString(),
+        tripId: selectedTripId,
         date: selectedDate,
         title: newEventTitle.trim(),
         time: newEventTime.trim() || 'All day',
@@ -76,6 +151,7 @@ export default function HomeScreen() {
     setNewEventTime('');
   };
 
+  // Update only the edited field while preserving the rest of the event.
   const updateEvent = (id: string, field: 'title' | 'time', value: string) => {
     setEvents(currentEvents =>
       currentEvents.map(event =>
@@ -88,22 +164,94 @@ export default function HomeScreen() {
     setEvents(currentEvents => currentEvents.filter(event => event.id !== id));
   };
 
-  events.forEach(event => {
+  // The shared context handles the trip list; this screen selects the new trip.
+  const createTrip = () => {
+    const name = newTripName.trim();
+    if (!name) return;
+
+    const newTrip = addTrip(name);
+    if (!newTrip) return;
+
+    setSelectedTripId(newTrip.id);
+    setNewTripName('');
+    setCreateTripModalVisible(false);
+  };
+
+  // Deleting a trip also removes its calendar events from local storage.
+  const deleteTrip = (tripId: string) => {
+    if (trips.length === 1) {
+      Alert.alert('Cannot delete trip', 'You must keep at least one trip.');
+      return;
+    }
+
+    const trip = trips.find(item => item.id === tripId);
+    if (!trip) return;
+
+    Alert.alert('Delete trip?', `Delete "${trip.name}" and its calendar events?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          const remainingTrips = trips.filter(item => item.id !== tripId);
+          removeTrip(tripId);
+          setEvents(currentEvents => currentEvents.filter(event => event.tripId !== tripId));
+          if (selectedTripId === tripId) setSelectedTripId(remainingTrips[0].id);
+          setTripMenuVisible(false);
+        },
+      },
+    ]);
+  };
+
+  const getTripSwipeResponder = (tripId: string) =>
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 10,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -60) deleteTrip(tripId);
+      },
+    });
+
+  // A single tap changes the selected date; a second tap within 1.2 seconds
+  // opens the event editor for that date.
+  const handleDayPress = (day: { dateString: string }) => {
+    const now = Date.now();
+    const previousPress = lastDayPress.current;
+    const isDoubleTap =
+      previousPress?.dateString === day.dateString &&
+      now - previousPress.timestamp < 1200;
+
+    setSelectedDate(day.dateString);
+
+    if (isDoubleTap) {
+      setModalVisible(true);
+      lastDayPress.current = null;
+    } else {
+      lastDayPress.current = {
+        dateString: day.dateString,
+        timestamp: now,
+      };
+    }
+  };
+
+  events
+    .filter(event => event.tripId === selectedTripId)
+    .forEach(event => {
     markedDates[event.date] = {
       marked: true,
-      dotColor: '#194454',
+      dotColor: '#995C54',
     };
   });
 
   markedDates[selectedDate] = {
     ...markedDates[selectedDate],
     selected: true,
-    selectedColor: '#995C54',
+    selectedColor: '#EC9E4C',
   };
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Header */}
+      {/* Header and shared trip selector */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.logoBackground}>
@@ -114,17 +262,85 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.title}>Travel Planner</Text>
         </View>
+
+        <View style={styles.tripMenuContainer}>
+          <Pressable
+            style={styles.tripSelector}
+            onPress={() => setTripMenuVisible(currentValue => !currentValue)}
+          >
+            <Text style={styles.tripSelectorText}>{selectedTrip?.name}</Text>
+            <Text style={styles.tripSelectorArrow}>⌄</Text>
+          </Pressable>
+
+          {tripMenuVisible && (
+            <View style={styles.tripDropdown}>
+              <Pressable
+                style={styles.createTripOption}
+                onPress={() => {
+                  setTripMenuVisible(false);
+                  setCreateTripModalVisible(true);
+                }}
+              >
+                <Text style={styles.createTripOptionText}>+ Create trip</Text>
+              </Pressable>
+
+              {trips.map(trip => (
+                <View key={trip.id} {...getTripSwipeResponder(trip.id).panHandlers}>
+                  <Pressable
+                    style={styles.tripOption}
+                    onPress={() => {
+                      setSelectedTripId(trip.id);
+                      setTripMenuVisible(false);
+                    }}
+                  >
+                    <View style={styles.tripOptionContent}>
+                      <Text style={styles.tripOptionText}>{trip.name}</Text>
+                      <Image source={require('../../assets/images/trashicon18.png')} style={styles.trashIcon} />
+                    </View>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
 
-      {/* Calendar */}
+      {/* Calendar and events for the selected day */}
       <View style={styles.container}>
         <Calendar
-          onDayPress={day => {
-            setSelectedDate(day.dateString);
-            setModalVisible(true);
-          }}
+        style={{
+          width: '100%',
+          height: 380,
+        }}
+          onDayPress={handleDayPress}
           markedDates={markedDates}
+          theme={{
+            arrowColor: '#41B8AA',
+            todayTextColor: '#41B8AA',
+            textDayFontSize: 18,
+            textMonthFontSize: 22,
+            textDayHeaderFontSize: 14,
+          }}
         />
+
+        <View style={styles.selectedDayEvents}>
+          <ScrollView
+            style={styles.eventsScrollView}
+            contentContainerStyle={styles.eventsScrollContent}
+            showsVerticalScrollIndicator
+          >
+            {selectedEvents.length === 0 ? (
+              <Text style={styles.noEventsText}>No events for this day.</Text>
+            ) : (
+              selectedEvents.map(event => (
+                <View style={styles.calendarEvent} key={event.id}>
+                  <Text style={styles.calendarEventTitle}>{event.title}</Text>
+                  <Text>{event.time}</Text>
+                </View>
+              ))
+            )}
+          </ScrollView>
+        </View>
       </View>
 
       <Modal
@@ -221,6 +437,41 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={createTripModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCreateTripModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Create a trip</Text>
+            <TextInput
+              style={styles.input}
+              value={newTripName}
+              onChangeText={setNewTripName}
+              placeholder="Trip name"
+              autoFocus
+            />
+
+            <View style={styles.buttonRow}>
+              <Pressable style={styles.addButton} onPress={createTrip}>
+                <Text style={styles.buttonText}>Create trip</Text>
+              </Pressable>
+              <Pressable
+                style={styles.closeButton}
+                onPress={() => {
+                  setNewTripName('');
+                  setCreateTripModalVisible(false);
+                }}
+              >
+                <Text style={styles.closeButtonText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -229,6 +480,7 @@ const styles = StyleSheet.create({
   header: {
     height: 100,
     backgroundColor: '#DA6555',
+    zIndex: 10,
     // height: 64,
     // paddingHorizontal: 16,
     // flexDirection: 'row',
@@ -266,10 +518,114 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#222222',
   },
+  tripMenuContainer: {
+    position: 'absolute',
+    top: 50,
+    right: -50,
+    width: 160,
+    zIndex: 20,
+  },
+  tripSelector: {
+    minHeight: 36,
+    paddingHorizontal: 10,
+    width: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+  },
+  tripSelectorText: {
+    flex: 1,
+    color: '#194454',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  tripSelectorArrow: {
+    marginLeft: 6,
+    fontSize: 24,
+    lineHeight: 24,
+    color: '#194454',
+  },
+  tripDropdown: {
+    position: 'absolute',
+    top: 40,
+    right: 60,
+    width: 160,
+    paddingVertical: 4,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    elevation: 5,
+    shadowColor: '#000000',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  createTripOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eeeeee',
+  },
+  createTripOptionText: {
+    color: '#194454',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  tripOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  tripOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tripOptionText: {
+    color: '#222222',
+    flex: 1,
+    textAlign: 'center',
+  },
+  trashIcon: {
+    width: 18,
+    height: 18,
+    marginLeft: 8,
+  },
 
   container: {
     flex: 1,
     padding: 16,
+  },
+  selectedDayEvents: {
+    marginTop: 16,
+  },
+  selectedDayTitle: {
+    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  eventsScrollView: {
+    maxHeight: 220,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+  },
+  eventsScrollContent: {
+    paddingBottom: 4,
+  },
+  noEventsText: {
+    fontSize: 16,
+    color: '#666666',
+  },
+  calendarEvent: {
+    padding: 12,
+    marginBottom: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+  },
+  calendarEventTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   event: {
     padding: 16,
@@ -316,7 +672,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#194454',
+    backgroundColor: '#41B8AA',
     borderRadius: 8,
   },
   deleteButton: {

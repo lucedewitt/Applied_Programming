@@ -39,10 +39,11 @@ The expected minimum amount of time each Sprint for each category is as follows:
 | 10/12/26 | 10:19    |   TP   | Finished/worked on login and Accounts pages| 62          |
 | 10/12/26 | 5:14     |   IM   | Fixed Expo and nmp stuff, added calendar   | 63          |
 | 10/13/26 | 4:19     |   TP   | Created and worked on team presentation    | 15          |
-| 10/13/26 | 5:12     |   IM   |                                            |             |
-|          |          |        |                                            |             |
-|          |          |        |                                            |             |
-|          |          |        |                                            |             |
+| 10/13/26 | 5:12     |   IM   | Calendar colors, trip dropdown             | 61          |
+| 10/14/26 | 10:16    |MTG & TP| Team presentations                         | 60          |
+| 10/14/26 | 7:38     |   IM   | Tabs styling, journal page, journal icon   | 79          |
+| 10/15/26 | 5:04     |   IM   | Fixed adding trips, created memory, delete icon, edit note feature, add comments, finishing details   | 66          |
+| 10/16/26 | 10:17    |   MTG  | Personal presentations                     |             |
 |          |          |        |                                            |             |
 
 _Note: Add more rows as needed._
@@ -51,9 +52,9 @@ _Note: Add more rows as needed._
 
 |Categroy                       |Total Time (Hours:Minutes)|
 |-------------------------------|:------------------------:|
-|IM - Individual Module         | 6h 48m                   |
-|TP - Team Project              | 3h 21m                   |
-|MTG - Class Meetings           | 44m                      |
+|IM - Individual Module         | 10h 14m                  |
+|TP - Team Project              | 4h 21m                   |
+|MTG - Class Meetings           | 1h 44m                   |
 |**TOTAL**                      |                          |
 
 <br>
@@ -77,18 +78,18 @@ Plan:
 - How would the journals be stored? Would it just be notes? Maybe you could have multiple journals and there are enteries inside it? Or would it be on a calandar again? It could be another drop down. But having like, little books/journals could look cool.
 - Extra: <span style="color: #FF8FAB">travel journal</span> (could just be a history of trips, or a journaling app)
 - How do you enter the itinerary? Where is that button? Is it with the add plan/edit plan? Or is there a way to edit the day's info? I think I prefer the day's info. Where would the add trip button be? Probably at the bottom/top of the dropdown.
-- How to go between the pages? Menu on the bottom? On the top next to the Title? Underneath the title? I don't know if I like any options yet. They all feel too claustrophobic.
+- How to go between the pages? Menu on the bottom? On the top next to the Title? Underneath the title? I don't know if I like any options yet. They all feel too claustrophobic. Eh, I'll just use the default bottom menu.
 
 
 Requirements:
-- The app should have at least one screen
-- Provide at least 1 input from the user (e.g. tap, double-tap, swipe)
-- The display should change after the input from the user
-- Display a picture
+- The app should have at least one screen <span style="color: #62F40C">✓</span>
+- Provide at least 1 input from the user (e.g. tap, double-tap, swipe) <span style="color: #62F40C">✓</span>
+- The display should change after the input from the user <span style="color: #62F40C">✓</span>
+- Display a picture <span style="color: #62F40C">✓</span>
 - Provide a custom icon for the app on the phone <span style="color: #62F40C">✓</span>
 
 Stretch:
-- Incorporate two or more screens
+- Incorporate two or more screens <span style="color: #62F40C">✓</span>
 
 Extra/If I had more time ideas:
 - Connect to/send out reminders?
@@ -99,6 +100,10 @@ Basic sketch of screens:
 <img src="sketch.JPG">
 
 Todo:
-- Edit colors on calendar (current day, arrows, do current colors look good?)
-- Add drop down to calendar with add trip option
-- Add travel journal page
+- Edit colors on calendar (current day, arrows, do current colors look good?) <span style="color: #62F40C">✓</span>
+- Add drop down to calendar with add trip option <span style="color: #62F40C">✓</span>
+- Add travel journal page <span style="color: #62F40C">✓</span>
+- Add memory/persistence? <span style="color: #62F40C">✓</span>
+- Add events notes? On the scroll thing?
+- When adding a new Trip, let user add events?
+- Add comments

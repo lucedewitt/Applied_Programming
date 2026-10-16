@@ -11,7 +11,15 @@ export default function AppTabs() {
     <NativeTabs
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
+      iconColor={{
+        default: "#194454",
+        selected: "#41B8AA"
+      }}
+      labelStyle={{
+        default: { color: "#194454" },
+        selected: { color: "#41B8AA" }, 
+        }}>
+
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
@@ -20,10 +28,10 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="journal">
+        <NativeTabs.Trigger.Label>Journal</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
+          src={require('@/assets/images/tabIcons/journalicon24.png')}
           renderingMode="template"
         />
       </NativeTabs.Trigger>

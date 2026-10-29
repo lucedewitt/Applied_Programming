@@ -43,7 +43,7 @@ The expected minimum amount of time each Sprint for each category is as follows:
 | 10/14/26 | 10:16    |MTG & TP| Team presentations                         | 60          |
 | 10/14/26 | 7:38     |   IM   | Tabs styling, journal page, journal icon   | 79          |
 | 10/15/26 | 5:04     |   IM   | Fixed adding trips, created memory, delete icon, edit note feature, add comments, finishing details   | 66          |
-| 10/16/26 | 10:17    |   MTG  | Personal presentations                     |             |
+| 10/16/26 | 10:17    |   MTG  | Personal presentations                     | 65          |
 |          |          |        |                                            |             |
 
 _Note: Add more rows as needed._
@@ -54,7 +54,7 @@ _Note: Add more rows as needed._
 |-------------------------------|:------------------------:|
 |IM - Individual Module         | 10h 14m                  |
 |TP - Team Project              | 4h 21m                   |
-|MTG - Class Meetings           | 1h 44m                   |
+|MTG - Class Meetings           | 2h 49m                   |
 |**TOTAL**                      |                          |
 
 <br>

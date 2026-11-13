@@ -35,11 +35,12 @@ The expected minimum amount of time each Sprint for each category is as follows:
 | 10/26/26 | 10:23    |   TP   | Updating Expo, Budget screen, presentation | 59          |
 | 10/26/26 | 4:35     |   IM   | Experimentation, learning, planning        | 60          |
 | 10/27/26 | 5:50     |   IM   | Learning (aggregate, views, updating)      | 39          |
-| 10/27/26 | 6:55     |   IM   | Updating, deleting                         | 25          |
+| 10/27/26 | 6:55     |   IM   | Learned updating, deleting                 | 25          |
 | 10/28/26 | 10:19    |TP & MTG| Team presentations                         | 58          |
-| 10/28/26 | 8:26     |   IM   | Created database, table data               |             |
-|          |          |        |                                            |             |
-|          |          |        |                                            |             |
+| 10/28/26 | 8:26     |   IM   | Created database, table data, fixed codex  | 68          |
+| 10/29/26 | 4:28     |   IM   | Added books, searching, menu, menu options | 122         |
+| 10/29/26 | 6:44     |   IM   | Finished most of menu (skipped filtering)  | 51          |
+| 10/30/26 | 10:15    |   MTG  | Personal presentations                     | 61          |
 |          |          |        |                                            |             |
 
 _Note: Add more rows as needed._
@@ -48,9 +49,9 @@ _Note: Add more rows as needed._
 
 |Categroy                       |Total Time (Hours:Minutes)|
 |-------------------------------|:------------------------:|
-|IM - Individual Module         | 6h 4m                    |
+|IM - Individual Module         | 10h 5m                   |
 |TP - Team Project              | 4h 8m                    |
-|MTG - Class Meetings           | 2h 4m                    |
+|MTG - Class Meetings           | 3h 5m                    |
 |**TOTAL**                      |                          |
 
 
@@ -62,28 +63,30 @@ _Note: Add more rows as needed._
 
 ## Personal Notes (ignore)
 <span style="color: #F12B76">Requirements</span>
-- Create a SQL database with at least one table (your software can create the table or you can use already existing table)
-- Software should query data from the database
-- Software should add new data to the database
-- Software should update data from the database
-- Software should delete data from the database
+- Create a SQL database with at least one table (your software can create the table or you can use already existing table) <span style="color: #62F40C">✓</span>
+- Software should query data from the database <span style="color: #62F40C">✓</span>
+- Software should add new data to the database <span style="color: #62F40C">✓</span>
+- Software should update data from the database <span style="color: #62F40C">✓</span>
+- Software should delete data from the database <span style="color: #62F40C">✓</span>
 
 <span style="color: #FFE338">Stretch challenge</span>
-- Use at least two of the aggregate functions to summarize numerical data in your database
+- Use at least two of the aggregate functions to summarize numerical data in your database <span style="color: #62F40C">✓</span>
 (https://www.sqlitetutorial.net/sqlite-aggregate-functions/)
 
 <span style="color: #F12B76">Idea: </span>
 a library catalog. It should let the user search for, update?, delete, and add books. (If there's time, function fully with tracking borrowing records)
-- Column ideas: name, author, description, genre, tags, year, length (pages), <span style="color: #FFE338">rating?</span> (rating could update it? or just have that as a seperate thing, might be weird)
+- Column ideas: name, author, description, genre, tags, year, length (pages), <span style="color: #FFE338">rating?</span> (rating could update it? or just have that as a seperate thing, might be weird) <span style="color: #62F40C">✓</span>
 - Extra column ideas: number of times checked out, date checked out, checked out status, number of copies, type (book vs ebook)
 
-<span style="color: #3794FF">Doing:</span>
+<span style="color: #3794FF">To Do:</span>
 More tutorial (finished star source mini tutorial) <span style="color: #62F40C">✓</span>
 Question at bottom of tutorial.py <span style="color: #62F40C">✓</span>
 Experimentation (label) in tutorial.py. Currently has errors (why?) <span style="color: #62F40C">✓</span>
 -What do I need to know? Search, filtering (just show? or save as a different group?), <span style="color: #62F40C">✓</span> add, tags? (Lists?), aggregate functions <span style="color: #62F40C">✓</span>
 What are aggregate functions? <span style="color: #62F40C">✓</span>
-How to update data?
+How to update data? <span style=color: #64F40C>✓</span>
+
+- Add newlines to descriptions?
 
 <span style="color: #3794FF">Notes:</span>
 - use execute() with single operations, and executemany() with multiple (like insert, update, delete)
